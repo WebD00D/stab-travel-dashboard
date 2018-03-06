@@ -1,3 +1,3 @@
-## STAB Travel
+## STAB Travel Dashboard
 
-Form to submit your surf travel guide to Stab
+Dashboard to review submitted surf travel guides.
