@@ -12,10 +12,12 @@ class App extends Component {
     super(props);
 
     this.markAsRead = this.markAsRead.bind(this);
+    this.handleStatusChange = this.handleStatusChange.bind(this);
 
     this.state = {
       submissions: [],
       viewingSingleSubmission: false,
+      singleKey: "",
       singleSubmissionData: []
     };
   }
@@ -30,6 +32,35 @@ class App extends Component {
         });
       }.bind(this)
     );
+  }
+
+  handleStatusChange(status, key) {
+    
+    let updates = {};
+
+    switch (status) {
+      case "In Review":
+        updates["submissions/" + key + "/read"] = true;
+        updates["submissions/" + key + "/active"] = true;
+        updates["submissions/" + key + "/published"] = false;
+        break;
+      case "Published":
+        updates["submissions/" + key + "/read"] = true;
+        updates["submissions/" + key + "/active"] = true;
+        updates["submissions/" + key + "/published"] = true;
+        break;
+      case "Ready for Review":
+        updates["submissions/" + key + "/read"] = false;
+        updates["submissions/" + key + "/active"] = false;
+        updates["submissions/" + key + "/published"] = false;
+        break;
+      default:
+    }
+
+    fire
+      .database()
+      .ref()
+      .update(updates);
   }
 
   markAsRead(key) {
@@ -60,9 +91,9 @@ class App extends Component {
             onClick={() => {
               this.setState({
                 viewingSingleSubmission: true,
-                singleSubmissionData: value
+                singleSubmissionData: value,
+                singleKey: key
               });
-              this.markAsRead(key);
             }}
             key={key}
             className="preview-block"
@@ -103,8 +134,6 @@ class App extends Component {
                 ) : (
                   ""
                 )}
-
-
               </div>
             </div>
           </div>
@@ -210,6 +239,32 @@ class App extends Component {
       }
     }
 
+    let selectedOption;
+
+    if (
+      !singleSubmissionData.read &&
+      !singleSubmissionData.active &&
+      !singleSubmissionData.published
+    ) {
+      selectedOption = "Ready for Review";
+    }
+
+    if (
+      singleSubmissionData.read &&
+      singleSubmissionData.active &&
+      !singleSubmissionData.published
+    ) {
+      selectedOption = "In Review";
+    }
+
+    if (
+      singleSubmissionData.read &&
+      singleSubmissionData.active &&
+      singleSubmissionData.published
+    ) {
+      selectedOption = "Published";
+    }
+
     return (
       <div className="stab-travel-dashboard">
         <div className="nav">
@@ -222,15 +277,34 @@ class App extends Component {
               <div className="single-form">
                 <div className="single-form__container">
                   <div className="single-form__header">
-                    <h3>Mentawai Islands</h3>
-                    <div
-                      onClick={() =>
-                        this.setState({ viewingSingleSubmission: false })
-                      }
-                      className="back"
-                    >
-                      {" "}
-                      <i className="fa fa-chevron-left" /> Back
+                    <div className="form-header-top">
+                      <h3>{singleSubmissionData.location}</h3>
+                      <div
+                        onClick={() =>
+                          this.setState({ viewingSingleSubmission: false })
+                        }
+                        className="back"
+                      >
+                        {" "}
+                        <i className="fa fa-chevron-left" /> Back
+                      </div>
+                    </div>
+                    <div>
+                      <select
+                        onChange={e =>
+                          this.handleStatusChange(
+                            e.target.value,
+                            this.state.singleKey
+                          )
+                        }
+                        defaultValue={selectedOption}
+                      >
+                        <option value="Ready for Review">
+                          Ready for Review
+                        </option>
+                        <option value="In Review">In Review</option>
+                        <option value="Published">Published</option>
+                      </select>
                     </div>
                   </div>
                   <div style={{ marginBottom: "48px" }}>
